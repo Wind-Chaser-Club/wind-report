@@ -11,9 +11,9 @@
                 border-radius: 16px; border: 1px solid #334155;
                 padding: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             }
-            .header { margin-bottom: 10px; }
-            .header h2 { margin: 0; font-size: 22px; color: #fff; }
-            .header h3 { margin: 5px 0 0; font-size: 12px; color: #94a3b8; font-weight: normal; }
+            .header { text-align: center; margin-bottom: 30px; margin-top: 20px; }
+            .header h2 { margin: 0; font-size: 26px; color: #fff; letter-spacing: 1px; }
+            .header h3 { margin: 8px 0 0; font-size: 13px; color: #94a3b8; font-weight: normal; text-transform: uppercase; letter-spacing: 2px; }
 
             .location-item { margin-bottom: 8px; }
             
@@ -47,15 +47,18 @@
                 .main-card { padding: 15px; }
                 .heatmap-wrap { height: 12px; }
             }
+            .footer { 
+                text-align: center; margin-top: 40px; margin-bottom: 20px; 
+                font-size: 11px; color: #64748b; opacity: 0.8; letter-spacing: 1px;
+            }
         </style>
     </head>
     <body>
+        <div class="header">
+            <h2>追风区域导航</h2>
+            <h3>Open-Meteo Data Service</h3>
+        </div>
         <div class="main-card">
-            <div class="header">
-                <h2>区域风速分布</h2>
-                <h3>METEO DATA SERVICE</h3>
-            </div>
-
             
             <div class="location-item">
                 <a href="weilanhaian.html" class="loc-link">
@@ -381,6 +384,9 @@
                 </div>
             </div>
             
+        </div>
+        <div class="footer">
+            Copyright©2026 Wind-Chaser-Club
         </div>
     </body>
     </html>
