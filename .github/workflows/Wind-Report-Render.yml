@@ -2,10 +2,8 @@ name: Wind Report Render
 
 on:
   schedule:
-    # 每天北京时间00:00 运行
-    # 对应 UTC 时间16:00
     - cron: '0 16 * * *'
-  workflow_dispatch: # 方便你手动测试
+  workflow_dispatch:
 
 jobs:
   build:
@@ -20,20 +18,27 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip' # 重点：开启 pip 缓存
+          cache: 'pip' # 开启缓存
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run render script
-        
-        run: python main.py
+        run: |
+          # 1. 创建一个临时目录存放生成的 HTML
+          mkdir -p public_html
+          # 2. 运行你的脚本
+          python main.py
+          # 3. 假设你的脚本把 HTML 生成在了根目录，我们把它们移动到 public_html
+          # (如果你的脚本可以直接输出到 public_html 更好)
+          mv *.html public_html/ 2>/dev/null || true
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-
+          # 只发布 public_html 这个文件夹里的内容
+          publish_dir: ./public_html
           publish_branch: gh-pages
