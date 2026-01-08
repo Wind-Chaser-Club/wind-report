@@ -26,10 +26,10 @@ print("--- 库加载完成 ---", flush=True)
 #)   
     
 
-def get_data(location_data):    # 获取数据
+def get_data(single_location_config):    # 获取数据
     
-    LAT = location_data['latitude'] # 纬度
-    LON = location_data['longitude'] # 经度
+    LAT = single_location_config['latitude'] # 纬度
+    LON = single_location_config['longitude'] # 经度
     #print(LAT, LON, name)
     weather_url = (
         f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}"
@@ -94,18 +94,18 @@ if __name__ == "__main__":
     #with open("location.json", "r") as f: # 读取 location.json 文件
     location_data = {'蔚蓝海岸': {'latitude': '39.762657', 'longitude': '119.401453', 'city': '秦皇岛', 'EN_name': 'weilanhaian'}, '金梦海湾': {'latitude': '39.895595', 'longitude': '119.551064', 'city': '秦皇岛', 'EN_name': 'jinmenghaiwan'}, 'A2俱乐部': {'latitude': '39.755827', 'longitude': '119.388122', 'city': '秦皇岛', 'EN_name': 'A2Club'}, '阿那亚': {'latitude': '39.664168', 'longitude': '119.329508', 'city': '秦皇岛', 'EN_name': 'Arnaya'}, '西秀海滩': {'latitude': '20.026979', 'longitude': '110.264196', 'city': '海口', 'EN_name': 'Xixiubeach'}, '假日海滩': {'latitude': '20.047316', 'longitude': '110.238781', 'city': '海口', 'EN_name': 'Holidayabeach'}, '高隆湾': {'latitude': '19.533378', 'longitude': '110.826326', 'city': '文昌', 'EN_name': 'Gaolongwan'}, '黎安泻湖': {'latitude': '18.421423', 'longitude': '110.051977', 'city': '陵水', 'EN_name': 'Lianlake'}, '白金湾': {'latitude': '19.188648', 'longitude': '110.605979', 'city': '博鳌', 'EN_name': 'Baijinwan'}, '角头湾': {'latitude': '18.374569', 'longitude': '108.980067', 'city': '三亚', 'EN_name': 'Jiaotouwan'}, '金沙滩': {'latitude': '40.221522', 'longitude': '122.064544', 'city': '营口', 'EN_name': 'Jinshatan'}, '夏家河子': {'latitude': '39.030248', 'longitude': '121.505042', 'city': ' 大连', 'EN_name': 'Xianjiahezi'}}
     print('location读取成功')
-    weather_data = {}
+    result = {}
     print('weather_data初始化成功')
 
     for i in location_data: # 遍历 location.json 文件中的每个位置
         print(f"请求 {i} 数据")  
         data = get_data(location_data[i])  
-        weather_data[i] = data
+        result[i] = data
         print(f"{i}数据已保存")
 
         generate_html(data,i,location_data[i])
 
-    render_index(weather_data,location_data)
+    render_index(result,location_data)
     #with open("weather_data.json", "w") as f: # 将数据保存到 weather_data.json 文件中
     #    json.dump(weather_data, f, indent=4)
     #print(weather_data)
