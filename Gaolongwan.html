@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Wind-Chaser-Club - 风浪矩阵</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #020617;
+            --card-bg: #1e293b;
+            --sunshine: #fbbf24;
+            --energy-orange: #f97316;
+            --water-cyan: #22d3ee;
+            --text-bright: #f8fafc;
+            --text-dim: #94a3b8;
+            --border-soft: rgba(255, 255, 255, 0.05);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: #070c1d;
+            background-image: radial-gradient(circle at 50% -20%, #1e293b 0%, #070c1d 80%);
+            color: var(--text-bright); 
+            font-family: 'Outfit', sans-serif;
+            padding: 5px;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        header { margin: 10px 0 15px 0; text-align: center; }
+        .loc-details { font-size: 1rem; font-weight: 700; color: #ffffff; letter-spacing: 1px; }
+        .loc-sub { opacity: 0.6; font-size: 0.8rem; color: var(--text-dim); }
+
+        .cards-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 5px 2px 20px 2px;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+        }
+        .cards-container::-webkit-scrollbar { display: none; }
+        
+        .day-card {
+            flex: 0 0 94vw;
+            max-width: 420px;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-soft);
+            scroll-snap-align: center;
+            animation: fadeInUp 0.4s ease-out forwards;
+            opacity: 0;
+            display: flex; flex-direction: column;
+            height: fit-content;
+        }
+
+        .card-header-row { display: flex; justify-content: flex-start; margin-bottom: 8px; }
+        .date-title { font-size: 0.95rem; font-weight: 700; color: var(--sunshine); }
+
+        .card-table-wrapper { overflow: hidden; }
+        .data-table { width: 100%; border-collapse: collapse; border-spacing: 0; }
+        .data-table th {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 5px 2px; color: var(--text-dim); font-size: 0.6rem; text-transform: uppercase;
+            border-bottom: 1px solid var(--border-soft);
+        }
+        .data-table td { padding: 0; height: 26px; text-align: center; }
+        .data-table tr:nth-child(even) { background: rgba(15, 23, 42, 0.4); }
+        
+        .col-time { font-family: 'JetBrains Mono'; font-size: 0.75rem; color: var(--text-dim); font-weight: 600; }
+        .col-icon { font-size: 1rem; }
+        .col-val { font-weight: 700; font-size: 0.8rem; padding: 0 4px !important; }
+        .col-wind-txt .g { color: var(--energy-orange); font-size: 0.55rem; }
+        .col-wind-txt .s { color: var(--water-cyan); font-size: 0.75rem; font-weight: 700; }
+        .arrow { font-size: 0.8rem; opacity: 0.7; }
+
+        /* Connected Vertical Area Bars */
+        .col-bar-cell { width: 40px; position: relative; padding: 0 !important; }
+        .smooth-bar-container { width: 100%; height: 26px; position: relative; }
+        .smooth-bar-container svg { width: 100%; height: 100%; display: block; }
+        
+        .card-chart-area {
+            padding: 5px 10px 10px 0px;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .wind-main-chart { width: 100%; height: 90px; overflow: visible; display: block; }
+        .chart-label { fill: #cbd5e1; font-size: 8px; font-family: 'JetBrains Mono'; font-weight: 500; opacity: 0.8; }
+        .chart-label-y { fill: #94a3b8; font-size: 8px; font-family: 'JetBrains Mono'; font-weight: 600; opacity: 0.6; }
+
+        /* Chart Animations */
+        .animate-path {
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            animation: drawPath 2s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+        .animate-area {
+            opacity: 0;
+            animation: fadeInArea 1s ease-out forwards;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes fadeInArea {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .val-overlay { 
+            position: absolute; width: 100%; text-align: center; top: 50%; left: 0; 
+            transform: translateY(-50%); font-size: 0.55rem; font-weight: 800; z-index: 2;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 0 3px rgba(0,0,0,0.5);
+        }
+
+        @media (min-width: 1000px) {
+            .day-card { flex: 0 0 380px; }
+            .cards-container { justify-content: center; }
+        }
+        .footer { 
+            text-align: center; margin-top: 20px; margin-bottom: 20px; 
+            font-size: 11px; color: #64748b; opacity: 0.8; letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="loc-details">高隆湾 <span class='loc-sub'>(文昌 19.533378, 110.826326)</span></div>
+    </header>
+
+    <div class="cards-container">
+        
+    </div>
+    <div class="footer">
+        Copyright©2026 Wind-Chaser-Club
+    </div>
+</body>
+</html>
