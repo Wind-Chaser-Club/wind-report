@@ -26,7 +26,7 @@ DAYS = 7
 #)   
     
 
-def get_data(location_data,name):    # 获取数据
+def get_data(location_data):    # 获取数据
     
     LAT = location_data['latitude'] # 纬度
     LON = location_data['longitude'] # 经度
@@ -42,13 +42,13 @@ def get_data(location_data,name):    # 获取数据
             f"&hourly=swell_wave_height,swell_wave_direction,sea_surface_temperature"
             f"&forecast_days={DAYS}&timezone=auto"
         ) # 海洋预报API
-    
+    weather_data = {} # 存储天气数据
     try:
         # 请求气象和海洋数据
         w_res = requests.get(weather_url).json()
         m_res = requests.get(marine_url).json()
         
-        weather_data = {} # 存储天气数据
+        
                 
 
         #print(f"--- 坐标 ({LAT}, {LON}) 未来 7 天预报 ---")
@@ -109,8 +109,8 @@ if __name__ == "__main__":
         
 
     for i in location_data: # 遍历 location.json 文件中的每个位置
-        #print(location_data[i])  
-        data = get_data(location_data[i],i)  
+        print(f"请求 {i} 数据")  
+        data = get_data(location_data[i])  
         weather_data[i] = data
         print(f"{i}数据已保存")
 
@@ -118,6 +118,5 @@ if __name__ == "__main__":
 
     render_index(weather_data,location_data)
     #with open("weather_data.json", "w") as f: # 将数据保存到 weather_data.json 文件中
-        #json.dump(weather_data, f, indent=4)
-
+    #    json.dump(weather_data, f, indent=4)
     #print(weather_data)
