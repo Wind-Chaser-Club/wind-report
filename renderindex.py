@@ -22,7 +22,7 @@ def render_index(data, location_data):
         for i, ts in enumerate(sorted_hours):
             # 颜色平滑渐变逻辑
             wind_s = timeline[ts].get('wind_s', 0)
-            hue = max(0, 200 - int(wind_s * 15)) 
+            hue = max(0, 220 - int(wind_s * 15)) 
             hourly_colors.append(f"hsl({hue}, 80%, 50%)")
             
             # 日期标签与分隔线逻辑
@@ -165,4 +165,5 @@ if __name__ == "__main__":
     except FileNotFoundError:
         location_data = {}
     render_index(weather_data, location_data)
+
         
