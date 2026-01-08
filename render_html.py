@@ -1,10 +1,9 @@
 import json
-import os
 from collections import defaultdict
 from astral import LocationInfo
 from astral.sun import sun
 from astral import moon
-import datetime
+from datetime import datetime
 
 # --- Visualization Logic ---
 def interpolate_color(c1, c2, f):
@@ -417,7 +416,7 @@ def generate_html(weather_data, location_name, location_data):
         {dashboard_html}
     </div>
     <div class="footer">
-        Copyright©2026 Wind-Chaser-Club
+        Copyright©2026 Wind-Chaser-Club {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
     </div>
 </body>
 </html>"""

@@ -51,8 +51,8 @@ def get_data(single_location_config,name):    # 获取数据
         try:
             print(f"{name}尝试第 {attempt + 1} 次请求...")
             # 请求气象和海洋数据
-            w_res = requests.get(weather_url).json()
-            m_res = requests.get(marine_url).json()   
+            w_res = requests.get(weather_url,timeout=10).json()
+            m_res = requests.get(marine_url,timeout=10).json()   
             
             
             # 遍历每小时的数据 
@@ -83,7 +83,8 @@ def get_data(single_location_config,name):    # 获取数据
                     "wave_d": wave_d_str,
                     "o_temp": o_temp
                 }
-                return weather_data
+                
+            return weather_data
 
         except Exception as e:
             attempt += 1
@@ -93,7 +94,7 @@ def get_data(single_location_config,name):    # 获取数据
                 time.sleep(2)  # 等待一会儿再试
             else:
                 print("达到最大重试次数，放弃。")
-    return None               
+                return None   
 
     
 
