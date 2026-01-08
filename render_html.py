@@ -50,7 +50,7 @@ def get_weather_icon(cloud, precip, hour, date_str, lat, lon):
         import zoneinfo
         tz = zoneinfo.ZoneInfo("Asia/Shanghai")
         y, m, d_num = map(int, date_str.split('-'))
-        date_obj = datetime.date(y, m, d_num)
+        date_obj = datetime(y, m, d_num, hour)
         city = LocationInfo("", "", "Asia/Shanghai", lat, lon)
         s = sun(city.observer, date=date_obj, tzinfo=tz)
         
@@ -435,3 +435,4 @@ if __name__ == "__main__":
     location_name = "蔚蓝海岸"
     weather_data = all_weather_data[location_name]
     generate_html(weather_data, location_name, location_data["蔚蓝海岸"])
+
