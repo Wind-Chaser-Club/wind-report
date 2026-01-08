@@ -98,10 +98,7 @@ def get_data(location_data):    # 获取数据
 
 
 if __name__ == "__main__":
-    with open("location.json", "r") as f: # 读取 location.json 文件
-        location_data = json.load(f)
-        print('location读取成功')
-    
+    location_data = {'蔚蓝海岸': {'latitude': '39.762657', 'longitude': '119.401453', 'city': '秦皇岛', 'EN_name': 'weilanhaian'}, '金梦海湾': {'latitude': '39.895595', 'longitude': '119.551064', 'city': '秦皇岛', 'EN_name': 'jinmenghaiwan'}, 'A2俱乐部': {'latitude': '39.755827', 'longitude': '119.388122', 'city': '秦皇岛', 'EN_name': 'A2Club'}, '阿那亚': {'latitude': '39.664168', 'longitude': '119.329508', 'city': '秦皇岛', 'EN_name': 'Arnaya'}, '西秀海滩': {'latitude': '20.026979', 'longitude': '110.264196', 'city': '海口', 'EN_name': 'Xixiubeach'}, '假日海滩': {'latitude': '20.047316', 'longitude': '110.238781', 'city': '海口', 'EN_name': 'Holidayabeach'}, '高隆湾': {'latitude': '19.533378', 'longitude': '110.826326', 'city': '文昌', 'EN_name': 'Gaolongwan'}, '黎安泻湖': {'latitude': '18.421423', 'longitude': '110.051977', 'city': '陵水', 'EN_name': 'Lianlake'}, '白金湾': {'latitude': '19.188648', 'longitude': '110.605979', 'city': '博鳌', 'EN_name': 'Baijinwan'}, '角头湾': {'latitude': '18.374569', 'longitude': '108.980067', 'city': '三亚', 'EN_name': 'Jiaotouwan'}, '金沙滩': {'latitude': '40.221522', 'longitude': '122.064544', 'city': '营口', 'EN_name': 'Jinshatan'}, '夏家河子': {'latitude': '39.030248', 'longitude': '121.505042', 'city': ' 大连', 'EN_name': 'Xianjiahezi'}}
     weather_data = {}
         
 
