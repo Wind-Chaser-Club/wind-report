@@ -1,31 +1,9 @@
-print("--- 脚本启动：正在加载库 ---", flush=True)
+
 import time
 import requests
 import json
 from renderindex import render_index
-from render_html import generate_html
-print("--- 库加载完成 ---", flush=True)
-
-
-# 1. 基础配置
-#LAT = 39.895595
-#LON = 119.551064
-#DAYS = 7
-
-# 2. 构建气象 API URL (云量、雨量、气温、风速、风向、阵风)
-#weather_url = (
-#    f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}"
-#    f"&hourly=temperature_2m,cloudcover,precipitation,windspeed_10m,winddirection_10m,windgusts_10m"
-#    f"&forecast_days={DAYS}&wind_speed_unit=ms&timezone=auto"
-#)
-
-# 3. 构建海洋 API URL (海浪高度、方向、海水表层温度)
-#marine_url = (
-#    f"https://marine-api.open-meteo.com/v1/marine?latitude={LAT}&longitude={LON}"
-#    f"&hourly=swell_wave_height,swell_wave_direction,sea_surface_temperature"
-#    f"&forecast_days={DAYS}&timezone=auto"
-#)   
-    
+from render_html import generate_html    
 
 def get_data(single_location_config,name):    # 获取数据
     
@@ -51,8 +29,8 @@ def get_data(single_location_config,name):    # 获取数据
         try:
             print(f"{name}尝试第 {attempt + 1} 次请求...")
             # 请求气象和海洋数据
-            w_res = requests.get(weather_url,timeout=30).json()
-            m_res = requests.get(marine_url,timeout=30).json()   
+            w_res = requests.get(weather_url,timeout=60).json()
+            m_res = requests.get(marine_url,timeout=60).json()   
             
             
             # 遍历每小时的数据 
@@ -119,3 +97,4 @@ if __name__ == "__main__":
     #    json.dump(weather_data, f, indent=4)
 
     #print(weather_data)
+
