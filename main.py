@@ -117,6 +117,7 @@ if __name__ == "__main__":
         generate_html(data,i,location_data[i])
 
     render_index(weather_data,location_data)
-    with open("weather_data.json", "w") as f: # 将数据保存到 weather_data.json 文件中
-        json.dump(weather_data, f, indent=4)
+    #with open("weather_data.json", "w") as f: # 将数据保存到 weather_data.json 文件中
+        #json.dump(weather_data, f, indent=4)
+
     #print(weather_data)
