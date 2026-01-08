@@ -1,6 +1,6 @@
 name: Wind Report Render
 
-于:
+on:
   schedule:
     # 每天北京时间00:00 运行
     # 对应 UTC 时间16:00
