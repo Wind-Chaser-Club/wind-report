@@ -1,4 +1,5 @@
 print("--- 脚本启动：正在加载库 ---", flush=True)
+import time
 import requests
 import json
 from renderindex import render_index
@@ -26,7 +27,7 @@ print("--- 库加载完成 ---", flush=True)
 #)   
     
 
-def get_data(single_location_config):    # 获取数据
+def get_data(single_location_config,name):    # 获取数据
     
     LAT = single_location_config['latitude'] # 纬度
     LON = single_location_config['longitude'] # 经度
@@ -42,52 +43,59 @@ def get_data(single_location_config):    # 获取数据
             f"&hourly=swell_wave_height,swell_wave_direction,sea_surface_temperature"
             f"&forecast_days=7&timezone=auto"
         ) # 海洋预报API
+    
     weather_data = {} # 存储天气数据
-    try:
-        # 请求气象和海洋数据
-        w_res = requests.get(weather_url).json()
-        m_res = requests.get(marine_url).json()
-        
-        
+    retries = 3
+    attempt = 0
+    while attempt < retries:
+        try:
+            print(f"{name}尝试第 {attempt + 1} 次请求...")
+            # 请求气象和海洋数据
+            w_res = requests.get(weather_url).json()
+            m_res = requests.get(marine_url).json()   
+            
+            
+            # 遍历每小时的数据 
+            for i in range(0, len(w_res['hourly']['time'])):
+                time_str = w_res['hourly']['time'][i].replace("T", " ")
+                cloud = w_res['hourly']['cloudcover'][i]
+                precip = w_res['hourly']['precipitation'][i]
+                temp = w_res['hourly']['temperature_2m'][i]
+                wind_s = w_res['hourly']['windspeed_10m'][i]
+                wind_g = w_res['hourly']['windgusts_10m'][i]
+                wind_d = w_res['hourly']['winddirection_10m'][i]
                 
+                # 海浪数据可能在某些时刻为 null (例如离岸太近或无数据)
+                wave_h = m_res['hourly']['swell_wave_height'][i]
+                wave_d = m_res['hourly']['swell_wave_direction'][i]
+                o_temp = m_res['hourly']['sea_surface_temperature'][i]
+                wave_h_str = f"{wave_h}" if wave_h is not None else "N/A"
+                wave_d_str = f"{wave_d}" if wave_d is not None else "N/A"
 
-        #print(f"--- 坐标 ({LAT}, {LON}) 未来 7 天预报 ---")
-        #print(f"{'时间':<16} | {'云量%':<4} | {'雨量mm':<4} |{'气温C°':<6}| {'海水温度C°':<12}| {'风速/阵风(m/s)':<10}| {'风向':<4}| {'浪高(m)':<5} | {'涌浪方向':<5}")
-        #print("-" * 85)
+                weather_data[time_str] = {
+                    "cloud": cloud,
+                    "precip": precip,
+                    "temp": temp,
+                    "wind_s": wind_s,
+                    "wind_g": wind_g,
+                    "wind_d": wind_d,
+                    "wave_h": wave_h_str,
+                    "wave_d": wave_d_str,
+                    "o_temp": o_temp
+                }
+                return weather_data
 
-        # 遍历每小时的数据 
-        for i in range(0, len(w_res['hourly']['time'])):
-            time_str = w_res['hourly']['time'][i].replace("T", " ")
-            cloud = w_res['hourly']['cloudcover'][i]
-            precip = w_res['hourly']['precipitation'][i]
-            temp = w_res['hourly']['temperature_2m'][i]
-            wind_s = w_res['hourly']['windspeed_10m'][i]
-            wind_g = w_res['hourly']['windgusts_10m'][i]
-            wind_d = w_res['hourly']['winddirection_10m'][i]
-            
-            # 海浪数据可能在某些时刻为 null (例如离岸太近或无数据)
-            wave_h = m_res['hourly']['swell_wave_height'][i]
-            wave_d = m_res['hourly']['swell_wave_direction'][i]
-            o_temp = m_res['hourly']['sea_surface_temperature'][i]
-            wave_h_str = f"{wave_h}" if wave_h is not None else "N/A"
-            wave_d_str = f"{wave_d}" if wave_d is not None else "N/A"
+        except Exception as e:
+            attempt += 1
+            print(f"发生错误: {e}")
+            if attempt < retries:
+                print("准备重试...")
+                time.sleep(2)  # 等待一会儿再试
+            else:
+                print("达到最大重试次数，放弃。")
+    return None               
 
-            weather_data[time_str] = {
-                "cloud": cloud,
-                "precip": precip,
-                "temp": temp,
-                "wind_s": wind_s,
-                "wind_g": wind_g,
-                "wind_d": wind_d,
-                "wave_h": wave_h_str,
-                "wave_d": wave_d_str,
-                "o_temp": o_temp
-            }
-            
-    except Exception as e:
-        print(f"获取数据失败: {e}")    
-
-    return weather_data
+    
 
 if __name__ == "__main__":
     print('--- 脚本启动', flush=True)
@@ -99,7 +107,7 @@ if __name__ == "__main__":
 
     for i in location_data: # 遍历 location.json 文件中的每个位置
         print(f"请求 {i} 数据")  
-        data = get_data(location_data[i])  
+        data = get_data(location_data[i],i)  
         result[i] = data
         print(f"{i}数据已保存")
 
