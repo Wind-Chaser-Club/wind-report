@@ -29,8 +29,8 @@ def get_data(single_location_config,name):    # 获取数据
         try:
             print(f"{name}尝试第 {attempt + 1} 次请求...")
             # 请求气象和海洋数据
-            w_res = requests.get(weather_url,timeout=(10,60)).json()
-            m_res = requests.get(marine_url,timeout=(10,60)).json()   
+            w_res = requests.get(weather_url,timeout=90).json()
+            m_res = requests.get(marine_url,timeout=90).json()   
             
             
             # 遍历每小时的数据 
@@ -97,5 +97,6 @@ if __name__ == "__main__":
     #    json.dump(weather_data, f, indent=4)
 
     #print(weather_data)
+
 
 
