@@ -2,3 +2,5 @@ requests
 arrow
 astral
 jinja2
+zoneinfo
+
