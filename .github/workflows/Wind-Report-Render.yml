@@ -24,7 +24,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Network Test
 
+        run: curl -I https://api.open-meteo.com
       - name: Run render script
         run: |
           # 1. 创建一个临时目录存放生成的 HTML
