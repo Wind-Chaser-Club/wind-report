@@ -1,9 +1,9 @@
+print("--- 脚本启动：正在加载库 ---", flush=True)
 import requests
 import json
-from datetime import datetime
 from renderindex import render_index
 from render_html import generate_html
-
+print("--- 库加载完成 ---", flush=True)
 
 
 # 1. 基础配置
@@ -94,16 +94,13 @@ def get_data(location_data):    # 获取数据
     return weather_data
 
 
-def render_data():
-    with open("weather_data.json", "r") as f: # 读取 weather_data.json 文件
-        weather_data = json.load(f)
-        print(type(weather_data), weather_data)
+
 
 
 if __name__ == "__main__":
     with open("location.json", "r") as f: # 读取 location.json 文件
         location_data = json.load(f)
-        #print(type(location_data), location_data)
+        print('location读取成功')
     
     weather_data = {}
         
