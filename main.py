@@ -13,13 +13,13 @@ def get_data(single_location_config,name):    # 获取数据
     weather_url = (
         f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}"
             f"&hourly=temperature_2m,cloudcover,precipitation,windspeed_10m,winddirection_10m,windgusts_10m"
-            f"&forecast_days=7&wind_speed_unit=ms&timezone=auto"
+            f"&forecast_days=10&wind_speed_unit=ms&timezone=auto"
         ) # 天气预报API
 
     marine_url = (
             f"https://marine-api.open-meteo.com/v1/marine?latitude={LAT}&longitude={LON}"
             f"&hourly=swell_wave_height,swell_wave_direction,sea_surface_temperature"
-            f"&forecast_days=7&timezone=auto"
+            f"&forecast_days=10&timezone=auto"
         ) # 海洋预报API
     
     weather_data = {} # 存储天气数据
@@ -97,6 +97,7 @@ if __name__ == "__main__":
     #    json.dump(weather_data, f, indent=4)
 
     #print(weather_data)
+
 
 
 
