@@ -5,6 +5,16 @@ from astral.sun import sun
 from astral import moon
 from datetime import datetime
 
+# --- 工具函数 ---
+def safe_float(val, default=0):
+    """安全地将值转换为 float，处理 'N/A' 和其他无效值"""
+    if val is None or val == '' or val == 'N/A':
+        return float(default)
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return float(default)
+
 # --- Visualization Logic ---
 def interpolate_color(c1, c2, f):
     try:
@@ -85,11 +95,11 @@ def create_wind_chart_svg(day_data, day_idx):
     
     max_v = 15.0
     for _, v in day_data:
-        max_v = max(max_v, float(v.get('wind_g',0) or 0), float(v.get('wind_s',0) or 0))
+        max_v = max(max_v, safe_float(v.get('wind_g',0)), safe_float(v.get('wind_s',0)))
     max_v *= 1.1 
     
     def get_x(i): return padding_left + (i / (n-1)) * (width - padding_left) if n > 1 else padding_left
-    def get_y(val): return height - (padding_bottom + (float(val or 0) / max_v) * (height - padding_top - padding_bottom))
+    def get_y(val): return height - (padding_bottom + (safe_float(val) / max_v) * (height - padding_top - padding_bottom))
 
     gust_pts = [f"{get_x(i)},{get_y(v.get('wind_g',0))}" for i, (_, v) in enumerate(day_data)]
     speed_pts = [f"{get_x(i)},{get_y(v.get('wind_s',0))}" for i, (_, v) in enumerate(day_data)]
@@ -153,9 +163,9 @@ def create_wind_chart_svg(day_data, day_idx):
 
 def create_smooth_bar_segment(idx, day_data, key, min_v, max_v, base_color):
     n = len(day_data)
-    cur = float(day_data[idx][1].get(key, 0) or 0)
-    prev = float(day_data[idx-1][1].get(key, cur) or 0) if idx > 0 else cur
-    nxt = float(day_data[idx+1][1].get(key, cur) or 0) if idx < n-1 else cur
+    cur = safe_float(day_data[idx][1].get(key, 0))
+    prev = safe_float(day_data[idx-1][1].get(key, cur)) if idx > 0 else cur
+    nxt = safe_float(day_data[idx+1][1].get(key, cur)) if idx < n-1 else cur
 
     def norm(v): return min(100, max(0, (v - min_v) / (max_v - min_v) * 100))
     w_cur, w_prev, w_nxt = norm(cur), norm(prev), norm(nxt)
@@ -187,24 +197,24 @@ def generate_dashboard_content(weather_data, lat, lon):
         rows_content = ""
         for i, (time_str, val) in enumerate(day_data):
             hour = int(time_str.split(':')[0])
-            icon = get_weather_icon(float(val.get('cloud',0) or 0), float(val.get('precip',0) or 0), hour, date_str, lat, lon)
+            icon = get_weather_icon(safe_float(val.get('cloud',0)), safe_float(val.get('precip',0)), hour, date_str, lat, lon)
             
-            temp = float(val.get('temp',0) or 0)
+            temp = safe_float(val.get('temp',0))
             temp_bar = create_smooth_bar_segment(i, day_data, 'temp', -10, 35, ('temp',))
             
-            wind_s = float(val.get('wind_s',0) or 0)
-            wind_g = float(val.get('wind_g',0) or 0)
+            wind_s = safe_float(val.get('wind_s',0))
+            wind_g = safe_float(val.get('wind_g',0))
             # Logic: Input 0 (N) -> Output 180 (Down)
             # Input 90 (E) -> Output 270 (Left)
             # Input 180 (S) -> Output 0 (Up)
             # Input 270 (W) -> Output 90 (Right)
-            wind_d = (float(val.get('wind_d',0) or 0) + 180) % 360
+            wind_d = (safe_float(val.get('wind_d',0)) + 180) % 360
             
-            wave_h = float(val.get('wave_h',0) or 0)
+            wave_h = safe_float(val.get('wave_h',0))
             wave_bar = create_smooth_bar_segment(i, day_data, 'wave_h', 0, 4, '#22d3ee')
-            wave_d = (float(val.get('wave_d',0) or 0) + 180) % 360
+            wave_d = (safe_float(val.get('wave_d',0)) + 180) % 360
             
-            o_temp = float(val.get('o_temp',0) or 0)
+            o_temp = safe_float(val.get('o_temp',0))
             o_temp_bar = create_smooth_bar_segment(i, day_data, 'o_temp', 0, 30, ('otemp',))
             
             s_color = "#00ff00" if wind_s >= 4 else "var(--water-cyan)"
@@ -435,4 +445,3 @@ if __name__ == "__main__":
     location_name = "蔚蓝海岸"
     weather_data = all_weather_data[location_name]
     generate_html(weather_data, location_name, location_data["蔚蓝海岸"])
-
