@@ -7,7 +7,7 @@ def render_index(data, location_data):
 
     for location, timeline in data.items():
         # 确保时间点排序
-        sorted_hours = sorted(timeline.keys())
+        sorted_hours = sorted(timeline.keys())[:120]
         total_steps = len(sorted_hours)
         
         # 统计每天出现的次数，用于计算居中偏移
@@ -167,3 +167,4 @@ if __name__ == "__main__":
     render_index(weather_data, location_data)
 
         
+
