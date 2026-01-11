@@ -1,8 +1,8 @@
 name: Wind Report Render
 
-on:
+于:
   schedule:
-    - cron: '0 16 * * *'
+    - cron: '0 4,16 * * *'
   workflow_dispatch:
 
 jobs:
