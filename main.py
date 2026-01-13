@@ -3,7 +3,8 @@ import time
 import requests
 import json
 from renderindex import render_index
-from render_html import generate_html    
+from render_html import generate_html
+    
 
 def get_data(single_location_config,name):    # 获取数据
     
@@ -12,8 +13,8 @@ def get_data(single_location_config,name):    # 获取数据
     #print(LAT, LON, name)
     weather_url = (
         f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}"
-            f"&hourly=temperature_2m,cloudcover,precipitation,windspeed_10m,winddirection_10m,windgusts_10m"
-            f"&forecast_days=10&wind_speed_unit=ms&timezone=auto"
+            f"&hourly=temperature_2m,cloudcover,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m"
+            f"&forecast_days=10&wind_speed_unit=ms&models=ecmwf_ifs&timezone=auto"
         ) # 天气预报API
 
     marine_url = (
@@ -39,9 +40,9 @@ def get_data(single_location_config,name):    # 获取数据
                 cloud = w_res['hourly']['cloudcover'][i]
                 precip = w_res['hourly']['precipitation'][i]
                 temp = w_res['hourly']['temperature_2m'][i]
-                wind_s = w_res['hourly']['windspeed_10m'][i]
-                wind_g = w_res['hourly']['windgusts_10m'][i]
-                wind_d = w_res['hourly']['winddirection_10m'][i]
+                wind_s = w_res['hourly']['wind_speed_10m'][i]
+                wind_g = w_res['hourly']['wind_gusts_10m'][i]
+                wind_d = w_res['hourly']['wind_direction_10m'][i]
                 
                 # 海浪数据可能在某些时刻为 null (例如离岸太近或无数据)
                 wave_h = m_res['hourly']['swell_wave_height'][i]
@@ -90,17 +91,9 @@ if __name__ == "__main__":
         result[i] = data
         print(f"{i}数据已保存")
 
-        generate_html(data,i,location_data[i])
+        #generate_html(data,i,location_data[i])
 
-    render_index(result,location_data)
-    #with open("weather_data.json", "w") as f: # 将数据保存到 weather_data.json 文件中
-    #    json.dump(weather_data, f, indent=4)
-
-    #print(weather_data)
-
-
-
-
-
-
-
+    #render_index(result,location_data)
+    with open("weather_data.json", "w") as f: # 将数据保存到 weather_data.json 文件中
+        json.dump(result, f, indent=4)
+    #print(result)
