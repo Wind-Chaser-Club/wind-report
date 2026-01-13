@@ -91,9 +91,9 @@ if __name__ == "__main__":
         result[i] = data
         print(f"{i}数据已保存")
 
-        #generate_html(data,i,location_data[i])
+        generate_html(data,i,location_data[i])
 
-    #render_index(result,location_data)
+    render_index(result,location_data)
     with open("weather_data.json", "w") as f: # 将数据保存到 weather_data.json 文件中
         json.dump(result, f, indent=4)
     #print(result)
