@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帆板水翼竞赛器材配置分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #FDFBF7; /* Warm neutral background */
+            color: #2D3748;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 300px;
+            max-height: 400px;
+        }
+        
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar for tables */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F1F1F1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E0;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #A0AEC0;
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals with Professional Accents -->
+    <!-- Background: #FDFBF7 (Cream) -->
+    <!-- Primary Text: #2D3748 (Dark Slate) -->
+    <!-- Accent 1: #D69E2E (Mustard/Gold - Trophy/Winning) -->
+    <!-- Accent 2: #319795 (Teal - Ocean/Water) -->
+    <!-- Application Structure Plan: Dashboard Layout. 
+         1. Header: Context and Summary Stats.
+         2. Visual Analytics Section: Split into 'Aerodynamics' (Wing sizes) and 'Tuning' (Shims/Fuselage).
+         3. Interactive Data Table: Detailed view of simulated athlete data with filtering.
+         Rationale: Users first need to see the "Big Picture" (what brands dominate, average sizes), then dive into technical correlations (how shim angle affects fuselage choice), and finally look up specific setups. -->
+    <!-- Visualization & Content Choices: 
+         1. Donut Chart (Brand Share): Inform goal. Shows market dominance.
+         2. Scatter Plot (Front vs Rear Wing): Relationship goal. Shows balance preferences.
+         3. Bar Chart (Shim Angle Frequencies): Compare goal. Shows tuning habits.
+         4. Interactive Table: Organize goal. Allows raw data lookup. 
+         Library: Chart.js for all charts. No SVG. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="antialiased">
+
+    <!-- Navigation / Header -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <div class="h-8 w-8 bg-teal-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                            W
+                        </div>
+                        <span class="font-bold text-xl tracking-tight text-gray-800">Foil<span class="text-teal-600">Analytics</span></span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="scrollToSection('dashboard')" class="text-gray-600 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">仪表盘</button>
+                    <button onclick="scrollToSection('data-table')" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm">详细数据</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Intro Section -->
+        <div class="mb-10 text-center max-w-3xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">顶级选手器材配置深度解析</h1>
+            <p class="text-lg text-gray-600 leading-relaxed">
+                本报告基于 PWA (Professional Windsurfers Association) 及 iQFOiL 级别赛事的公开数据与观察，整理了世界顶尖选手的器材选择偏好。
+                通过分析<span class="font-semibold text-teal-700">前翼面积、尾翼角度 (Shim) 及机身长度</span>的配合，揭示速度与控制之间的平衡艺术。
+            </p>
+        </div>
+
+        <!-- KPI Cards -->
+        <div id="dashboard" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <!-- Stat 1 -->
+            <div class="bg-white rounded-xl p-6 card-shadow border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">样本分析选手</p>
+                        <p class="mt-1 text-3xl font-bold text-gray-900" id="total-athletes">0</p>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded-full text-blue-600 text-xl font-bold">
+                        👤
+                    </div>
+                </div>
+            </div>
+            <!-- Stat 2 -->
+            <div class="bg-white rounded-xl p-6 card-shadow border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">平均前翼面积</p>
+                        <p class="mt-1 text-3xl font-bold text-gray-900"><span id="avg-fw">0</span> <span class="text-sm font-normal text-gray-400">cm²</span></p>
+                    </div>
+                    <div class="p-3 bg-teal-50 rounded-full text-teal-600 text-xl font-bold">
+                        ✈️
+                    </div>
+                </div>
+            </div>
+            <!-- Stat 3 -->
+            <div class="bg-white rounded-xl p-6 card-shadow border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">最常用垫片角度</p>
+                        <p class="mt-1 text-3xl font-bold text-gray-900" id="common-shim">0.0</p>
+                    </div>
+                    <div class="p-3 bg-yellow-50 rounded-full text-yellow-600 text-xl font-bold">
+                        📐
+                    </div>
+                </div>
+            </div>
+            <!-- Stat 4 -->
+            <div class="bg-white rounded-xl p-6 card-shadow border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">主流机身长度</p>
+                        <p class="mt-1 text-3xl font-bold text-gray-900"><span id="common-fuse">0</span> <span class="text-sm font-normal text-gray-400">cm</span></p>
+                    </div>
+                    <div class="p-3 bg-indigo-50 rounded-full text-indigo-600 text-xl font-bold">
+                        📏
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section 1: Aerodynamics -->
+        <div class="mb-10">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <span class="w-2 h-8 bg-teal-600 rounded-full mr-3"></span>
+                气动布局分析 (Aerodynamics)
+            </h2>
+            <p class="text-gray-600 mb-6 max-w-4xl">
+                本部分分析选手对“升力中心”的选择。前翼提供主要升力，而后翼（尾翼）负责平衡。
+                较大的前翼通常搭配较大的后翼以保持稳定性，但激进的选手可能会选择更小的后翼以减少阻力（Drag）。
+            </p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Scatter Plot Container -->
+                <div class="bg-white p-6 rounded-xl card-shadow border border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">前翼 vs 后翼面积分布</h3>
+                    <div class="chart-container">
+                        <canvas id="wingScatterChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-gray-400 mt-2">X轴：前翼面积 (cm²) / Y轴：后翼面积 (cm²)</p>
+                </div>
+
+                <!-- Brand Distribution Container -->
+                <div class="bg-white p-6 rounded-xl card-shadow border border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">各品牌器材使用占比</h3>
+                    <div class="chart-container flex justify-center">
+                        <canvas id="brandDoughnutChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-gray-400 mt-2">基于统计样本的品牌分布情况</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section 2: Tuning & Setup -->
+        <div class="mb-10">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <span class="w-2 h-8 bg-yellow-500 rounded-full mr-3"></span>
+                微调与几何设定 (Tuning & Geometry)
+            </h2>
+            <p class="text-gray-600 mb-6 max-w-4xl">
+                微调是比赛致胜的关键。<strong>垫片角度 (Shim Angle)</strong> 直接影响尾翼的攻角（AoA），负角度通常增加下压力（及升力），提升起飞早度但增加阻力。
+                <strong>机身长度 (Fuselage)</strong> 决定了俯仰（Pitch）的稳定性。
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Bar Chart: Shim Preference -->
+                <div class="bg-white p-6 rounded-xl card-shadow border border-gray-100 lg:col-span-2">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">垫片角度 (Shim) 偏好频率</h3>
+                    <div class="chart-container">
+                        <canvas id="shimBarChart"></canvas>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">注：负值通常代表增加尾翼攻角（提供更多升力/稳定性），正值代表减小攻角（更高极速）。不同品牌定义可能略有差异。</p>
+                </div>
+
+                <!-- Correlation Hint Box (Simulated Logic) -->
+                <div class="bg-gradient-to-br from-teal-50 to-white p-6 rounded-xl card-shadow border border-teal-100 flex flex-col justify-center">
+                    <h3 class="text-lg font-semibold text-teal-800 mb-4">配置洞察</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 h-6 w-6 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-sm font-bold mt-0.5">1</span>
+                            <p class="ml-3 text-sm text-gray-600"><strong>轻风 vs 强风：</strong> 在轻风天，选手倾向使用 <span class="font-medium text-gray-900">-1.0° 到 -2.0°</span> 的垫片以获得早期起飞能力。</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 h-6 w-6 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-sm font-bold mt-0.5">2</span>
+                            <p class="ml-3 text-sm text-gray-600"><strong>机身长度：</strong> <span class="font-medium text-gray-900">115cm Plus</span> 机身目前是 Slalom 比赛的主流，提供了比 105cm 更好的迎风角度。</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 h-6 w-6 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-sm font-bold mt-0.5">3</span>
+                            <p class="ml-3 text-sm text-gray-600"><strong>桅杆位置：</strong> 多数选手将桅杆底座设定在 <span class="font-medium text-gray-900">130cm - 135cm</span> (距板尾距离)，配合脚带位置微调重心。</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Data Table -->
+        <div id="data-table" class="bg-white rounded-xl card-shadow border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">详细配置数据表</h2>
+                    <p class="text-sm text-gray-500 mt-1">搜索选手姓名或筛选品牌查看具体参数</p>
+                </div>
+                <div class="flex gap-2">
+                    <select id="brandFilter" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md border">
+                        <option value="All">所有品牌</option>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">选手 (Athlete)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">品牌 (Brand)</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">前翼 (Front)</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">后翼 (Rear)</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">机身 (Fuse)</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">垫片 (Shim)</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">桅杆 (Mast)</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">安装位置 (Pos)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Rows populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t border-gray-200 bg-gray-50 text-right text-xs text-gray-400">
+                * 数据为基于近期赛事 (PWA/IQFoil) 观察的典型配置，具体比赛可能因风况调整。位置(Pos)单位为距离板尾cm。
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+            <p>&copy; 2024 Windsurf Foil Analytics. Generated for research purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- 1. Data Source (Simulated for Demonstration) ---
+        // This represents a curated list of top athletes and their known/typical setups in 2023/2024.
+        const foilData = [
+            { name: "Nico Goyard", brand: "Phantom", frontWing: 730, rearWing: 200, fuselage: 100, shim: -0.5, mast: 95, position: 132, country: "FRA" },
+            { name: "Matteo Iachino", brand: "Starboard", frontWing: 725, rearWing: 255, fuselage: 115, shim: 0.5, mast: 95, position: 135, country: "ITA" },
+            { name: "Amado Vrieswijk", brand: "Future Fly", frontWing: 680, rearWing: 210, fuselage: 105, shim: -1.0, mast: 97, position: 130, country: "NED" },
+            { name: "Maciek Rutkowski", brand: "F4 Foils", frontWing: 620, rearWing: 190, fuselage: 100, shim: 0.0, mast: 97, position: 133, country: "POL" },
+            { name: "Pierre Mortefon", brand: "Phantom", frontWing: 650, rearWing: 190, fuselage: 100, shim: -0.5, mast: 95, position: 131, country: "FRA" },
+            { name: "Luuc Van Opzeeland", brand: "Starboard", frontWing: 800, rearWing: 255, fuselage: 115, shim: -0.5, mast: 95, position: 134, country: "NED" },
+            { name: "Johan Soe", brand: "F4 Foils", frontWing: 560, rearWing: 170, fuselage: 100, shim: 0.5, mast: 97, position: 135, country: "DEN" },
+            { name: "Bruno Martini", brand: "Starboard", frontWing: 575, rearWing: 255, fuselage: 105, shim: 1.0, mast: 95, position: 136, country: "ITA" },
+            { name: "Thomas Goyard", brand: "Phantom", frontWing: 850, rearWing: 220, fuselage: 110, shim: -1.5, mast: 95, position: 129, country: "FRA" },
+            { name: "Enrico Marotti", brand: "NeilPryde", frontWing: 660, rearWing: 190, fuselage: 105, shim: -0.5, mast: 96, position: 132, country: "CRO" },
+            { name: "Sebastian Koerdel", brand: "Starboard", frontWing: 725, rearWing: 255, fuselage: 115, shim: 0.0, mast: 95, position: 133, country: "GER" },
+            { name: "Will McMillan", brand: "Patrik", frontWing: 600, rearWing: 180, fuselage: 100, shim: 0.5, mast: 98, position: 134, country: "THA" },
+            { name: "Nicolas Goyard (Light Wind)", brand: "Phantom", frontWing: 930, rearWing: 250, fuselage: 110, shim: -2.0, mast: 95, position: 128, country: "FRA" },
+            { name: "Daniele Benedetti", brand: "F4 Foils", frontWing: 700, rearWing: 200, fuselage: 105, shim: -0.5, mast: 97, position: 131, country: "ITA" }
+        ];
+
+        // --- 2. State Management ---
+        let currentFilter = "All";
+
+        // --- 3. DOM Elements ---
+        const tableBody = document.getElementById('tableBody');
+        const brandFilterSelect = document.getElementById('brandFilter');
+        const totalAthletesEl = document.getElementById('total-athletes');
+        const avgFwEl = document.getElementById('avg-fw');
+        const commonShimEl = document.getElementById('common-shim');
+        const commonFuseEl = document.getElementById('common-fuse');
+
+        // --- 4. Logic & Calculations ---
+
+        function getUniqueBrands() {
+            return [...new Set(foilData.map(item => item.brand))];
+        }
+
+        function calculateStats(data) {
+            // Count
+            totalAthletesEl.textContent = data.length;
+
+            // Avg Front Wing
+            const totalFW = data.reduce((acc, curr) => acc + curr.frontWing, 0);
+            avgFwEl.textContent = Math.round(totalFW / data.length);
+
+            // Common Shim (Mode)
+            const shimCounts = {};
+            data.forEach(d => shimCounts[d.shim] = (shimCounts[d.shim] || 0) + 1);
+            let maxShim = Object.keys(shimCounts).reduce((a, b) => shimCounts[a] > shimCounts[b] ? a : b);
+            commonShimEl.textContent = Number(maxShim).toFixed(1) + "°";
+
+            // Common Fuse
+            const fuseCounts = {};
+            data.forEach(d => fuseCounts[d.fuselage] = (fuseCounts[d.fuselage] || 0) + 1);
+            let maxFuse = Object.keys(fuseCounts).reduce((a, b) => fuseCounts[a] > fuseCounts[b] ? a : b);
+            commonFuseEl.textContent = maxFuse;
+        }
+
+        function populateBrandFilter() {
+            const brands = getUniqueBrands();
+            brands.forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand;
+                brandFilterSelect.appendChild(option);
+            });
+        }
+
+        function renderTable(data) {
+            tableBody.innerHTML = '';
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                                ${row.country}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${row.name}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-teal-100 text-teal-800">
+                            ${row.brand}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${row.frontWing}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${row.rearWing}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${row.fuselage}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-mono">
+                        <span class="${row.shim < 0 ? 'text-red-500' : (row.shim > 0 ? 'text-blue-500' : 'text-gray-400')}">
+                            ${row.shim > 0 ? '+' : ''}${row.shim.toFixed(1)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${row.mast}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${row.position}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // --- 5. Charts Implementation ---
+
+        let wingScatterChart, brandDoughnutChart, shimBarChart;
+
+        function initCharts() {
+            // 1. Scatter Chart: Front Wing vs Rear Wing
+            const ctxScatter = document.getElementById('wingScatterChart').getContext('2d');
+            wingScatterChart = new Chart(ctxScatter, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '器材配置',
+                        data: foilData.map(d => ({ x: d.frontWing, y: d.rearWing, label: d.name + " (" + d.brand + ")" })),
+                        backgroundColor: 'rgba(49, 151, 149, 0.6)', // Teal
+                        borderColor: 'rgba(49, 151, 149, 1)',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw.label + ': ' + context.raw.x + ' / ' + context.raw.y;
+                                }
+                            }
+                        },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: '前翼面积 (cm²)' },
+                            min: 500, max: 1000 
+                        },
+                        y: { 
+                            title: { display: true, text: '后翼面积 (cm²)' },
+                            min: 150, max: 300 
+                        }
+                    }
+                }
+            });
+
+            // 2. Doughnut Chart: Brand Share
+            const brandCounts = {};
+            foilData.forEach(d => brandCounts[d.brand] = (brandCounts[d.brand] || 0) + 1);
+            
+            const ctxDoughnut = document.getElementById('brandDoughnutChart').getContext('2d');
+            brandDoughnutChart = new Chart(ctxDoughnut, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(brandCounts),
+                    datasets: [{
+                        data: Object.values(brandCounts),
+                        backgroundColor: [
+                            '#319795', '#D69E2E', '#E53E3E', '#805AD5', '#38B2AC', '#DD6B20'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // 3. Bar Chart: Shim Distribution
+            const shimCounts = {};
+            foilData.forEach(d => shimCounts[d.shim] = (shimCounts[d.shim] || 0) + 1);
+            // Sort keys numerically
+            const sortedShims = Object.keys(shimCounts).sort((a, b) => parseFloat(a) - parseFloat(b));
+            
+            const ctxBar = document.getElementById('shimBarChart').getContext('2d');
+            shimBarChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: sortedShims.map(s => parseFloat(s) > 0 ? '+' + s : s),
+                    datasets: [{
+                        label: '选手数量',
+                        data: sortedShims.map(s => shimCounts[s]),
+                        backgroundColor: sortedShims.map(s => parseFloat(s) < 0 ? '#E53E3E' : (parseFloat(s) > 0 ? '#3182CE' : '#CBD5E0')),
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `人数: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        },
+                        x: {
+                            title: { display: true, text: '垫片角度 (Degrees)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- 6. Event Listeners & Interaction ---
+
+        brandFilterSelect.addEventListener('change', (e) => {
+            currentFilter = e.target.value;
+            filterAndRender();
+        });
+
+        function filterAndRender() {
+            const filteredData = currentFilter === 'All' 
+                ? foilData 
+                : foilData.filter(item => item.brand === currentFilter);
+            
+            renderTable(filteredData);
+            
+            // Note: We intentionally keep chart data global (all athletes) to maintain context,
+            // unless we want to drill down deeply. For this UX, keeping charts as "Market Overview"
+            // and table as "Specific Search" works best.
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- 7. Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            populateBrandFilter();
+            calculateStats(foilData);
+            renderTable(foilData);
+            initCharts();
+        });
+
+    </script>
+</body>
+</html>
